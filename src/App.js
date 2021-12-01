@@ -1,25 +1,53 @@
-import logo from './logo.svg';
-import './App.css';
+import React, { useState, useEffect } from "react";
+import { API } from "aws-amplify";
+import "./App.css";
 
-function App() {
+const App = () => {
+  const [coins, updateCoins] = useState([]);
+
+  const [input, updateInput] = useState({ limit: 5, start: 0 });
+
+  // create new function to allow users to update the input values
+  const updateInputValues = (type, value) => {
+    updateInput({ ...input, [type]: value });
+  };
+
+  const fetchCoins = async () => {
+    const { limit, start } = input;
+    const data = await API.get(
+      "cryptoapi",
+      `/coins?limit=${limit}&start=${start}`
+    );
+
+    updateCoins(data.coins);
+  };
+
+  useEffect(() => {
+    fetchCoins();
+  }, []);
+
   return (
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+      <input
+        onChange={(e) => updateInputValues("limit", e.target.value)}
+        placeholder="Limit"
+      />
+      <input
+        placeholder="start"
+        onChange={(e) => updateInputValues("start", e.target.value)}
+      />
+
+      <button onClick={fetchCoins}>Fetch coins</button>
+      {coins &&
+        coins.map((coin, index) => (
+          <div key={index}>
+            <h2>
+              {coin.name} - {coin.symbol}
+            </h2>
+            <h5>{coin.price_usd}</h5>
+          </div>
+        ))}
     </div>
   );
-}
-
+};
 export default App;
